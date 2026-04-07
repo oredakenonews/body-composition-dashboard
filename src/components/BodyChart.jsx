@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 const METRIC_OPTIONS = [
   { value: 'weight', label: '体重 (kg)', color: '#178acc' },
   { value: 'fat', label: '体脂肪率 (%)', color: '#E24B4A' },
+  { value: 'fatMass', label: '体脂肪量 (kg)', color: '#f97316' },
   { value: 'muscle', label: '骨格筋量 (kg)', color: '#1D9E75' },
   { value: 'visceral', label: '内臓脂肪レベル', color: '#EF9F27' },
   { value: 'bmr', label: '基礎代謝 (kcal)', color: '#7F77DD' },
