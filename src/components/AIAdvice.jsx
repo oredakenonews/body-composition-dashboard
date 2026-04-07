@@ -16,13 +16,22 @@ export default function AIAdvice({ data }) {
     const recent = data.slice(-7);
     const recentFirst = recent[0];
 
-    // 骨格筋量の変化（全期間・直近）
+    // 全期間変化
     const totalMuscleChange = (latest.muscle - first.muscle).toFixed(1);
-    const recentMuscleChange = (latest.muscle - recentFirst.muscle).toFixed(1);
     const totalFatChange = (first.fatMass - latest.fatMass).toFixed(1);
-    const recentFatChange = (recentFirst.fatMass - latest.fatMass).toFixed(1);
     const totalWeightChange = (first.weight - latest.weight).toFixed(1);
+
+    // 直近変化（±0.5kg以内は誤差範囲として表示を差し替え）
     const recentWeightChange = (recentFirst.weight - latest.weight).toFixed(1);
+    const recentMuscleChangeNum = Number((latest.muscle - recentFirst.muscle).toFixed(1));
+    const recentFatChangeNum = Number((recentFirst.fatMass - latest.fatMass).toFixed(1));
+
+    const recentMuscleNote = Math.abs(recentMuscleChangeNum) <= 0.5
+      ? '変化なし（誤差範囲）'
+      : `${recentMuscleChangeNum >= 0 ? '+' : ''}${recentMuscleChangeNum}kg`;
+    const recentFatNote = Math.abs(recentFatChangeNum) <= 0.5
+      ? '変化なし（誤差範囲）'
+      : `${recentFatChangeNum >= 0 ? '-' : '+'}${Math.abs(recentFatChangeNum)}kg`;
 
     const prompt = `あなたは体組成データを分析するフィットネスアドバイザーです。
 出力はプレーンテキストのみで、マークダウン記号（**や##など）は一切使わないこと。
@@ -34,13 +43,13 @@ export default function AIAdvice({ data }) {
 
 【直近7計測のトレンド】${recentFirst.dateLabel.slice(0, 10)}〜${latest.dateLabel.slice(0, 10)}
 体重: ${recentFirst.weight}kg → ${latest.weight}kg（${Number(recentWeightChange) >= 0 ? '-' : '+'}${Math.abs(recentWeightChange)}kg）
-体脂肪量: ${recentFirst.fatMass}kg → ${latest.fatMass}kg（${Number(recentFatChange) >= 0 ? '-' : '+'}${Math.abs(recentFatChange)}kg）
-骨格筋量: ${recentFirst.muscle}kg → ${latest.muscle}kg（${Number(recentMuscleChange) >= 0 ? '+' : ''}${recentMuscleChange}kg）
+体脂肪量: ${recentFirst.fatMass}kg → ${latest.fatMass}kg（${recentFatNote}）
+骨格筋量: ${recentFirst.muscle}kg → ${latest.muscle}kg（${recentMuscleNote}）
 
 目標: 体重73kg（残り${(latest.weight - 73).toFixed(1)}kg）
 
 【分析の注意事項】
-- 骨格筋量の変化が±0.5kg以内は体組成計の誤差範囲のため「変化なし」として扱い、減少と断言しないこと
+- 「変化なし（誤差範囲）」と記載された項目はポジティブ・ネガティブどちらの評価もしないこと
 - 全期間と直近トレンドを明確に区別して評価すること
 - 直近トレンドを優先してコンディションを判断すること
 
