@@ -1,7 +1,5 @@
 import { useState } from 'react';
 
-const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
-
 export default function AIAdvice({ data }) {
   const [advice, setAdvice] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,17 +21,10 @@ export default function AIAdvice({ data }) {
 この人のデータを分析して、①進捗の評価、②気になるポイント、③今後のアドバイス を3〜5文で述べてください。`;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/advice', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-calls': 'true',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
           messages: [{ role: 'user', content: prompt }],
         }),
       });
