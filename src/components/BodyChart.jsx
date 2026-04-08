@@ -17,6 +17,14 @@ const RANGE_OPTIONS = [
   { value: 9999, label: '全期間' },
 ];
 
+function calcMovingAverage(data, metric, window = 14) {
+  return data.map((_, i) => {
+    const slice = data.slice(Math.max(0, i - window + 1), i + 1);
+    const avg = slice.reduce((sum, r) => sum + r[metric], 0) / slice.length;
+    return Math.round(avg * 10) / 10;
+  });
+}
+
 export default function BodyChart({ data }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
@@ -32,27 +40,47 @@ export default function BodyChart({ data }) {
         return data.filter(r => r.date >= cutoff);
       })();
       const m = METRIC_OPTIONS.find(o => o.value === metric);
+      const maData = calcMovingAverage(filtered, metric, 14);
       if (chartRef.current) chartRef.current.destroy();
       chartRef.current = new Chart(canvasRef.current, {
         type: 'line',
         data: {
           labels: filtered.map(r => r.dateLabel.slice(0, 10)),
-          datasets: [{
-            label: m.label,
-            data: filtered.map(r => r[metric]),
-            borderColor: m.color,
-            backgroundColor: m.color + '18',
-            borderWidth: 2,
-            pointRadius: filtered.length > 60 ? 0 : 3,
-            pointHoverRadius: 5,
-            fill: true,
-            tension: 0.3,
-          }],
+          datasets: [
+            {
+              label: m.label,
+              data: filtered.map(r => r[metric]),
+              borderColor: m.color,
+              backgroundColor: m.color + '18',
+              borderWidth: 2,
+              pointRadius: filtered.length > 60 ? 0 : 3,
+              pointHoverRadius: 5,
+              fill: true,
+              tension: 0.3,
+            },
+            {
+              label: '14日移動平均',
+              data: maData,
+              borderColor: m.color + '99',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              borderDash: [6, 3],
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              fill: false,
+              tension: 0.3,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: {
+              display: true,
+              labels: { font: { size: 11 }, boxWidth: 20 },
+            },
+          },
           scales: {
             x: { ticks: { maxTicksLimit: 8, maxRotation: 30, font: { size: 11 } }, grid: { display: false } },
             y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
