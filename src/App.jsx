@@ -93,15 +93,6 @@ export default function App() {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{ minHeight: "100vh", background: "#060d1a", color: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>読み込み中...</div>;
-  if (!allData.length) return <div style={{ minHeight: "100vh", background: "#060d1a", color: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>データがありません</div>;
-
-  const first = allData[0];
-  const last  = allData[allData.length - 1];
-  const stats = METRICS.map(m => ({ ...m, start: first[m.key], end: last[m.key], diff: +(last[m.key] - first[m.key]).toFixed(1), min: +Math.min(...allData.map(d => d[m.key])).toFixed(1), max: +Math.max(...allData.map(d => d[m.key])).toFixed(1) }));
-  const activeStats = stats.find(s => s.key === activeMetric.key);
-  const trendData = allData.length <= 40 ? allData : allData.filter((_, i) => i % 2 === 0 || i === allData.length - 1);
-
   const monthlyTable = useMemo(() => {
     const map = {};
     allData.forEach(d => { if (!map[d.monthLabel]) map[d.monthLabel] = []; map[d.monthLabel].push(d); });
@@ -110,6 +101,15 @@ export default function App() {
       return { month: month.replace("2025/", "").replace("2026/", "'26/"), weight: avg("weight"), fatPct: avg("fatPct"), muscleKg: avg("muscleKg"), visceral: avg("visceral"), bodyAge: avg("bodyAge") };
     });
   }, [allData]);
+
+  if (loading) return <div style={{ minHeight: "100vh", background: "#060d1a", color: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>読み込み中...</div>;
+  if (!allData.length) return <div style={{ minHeight: "100vh", background: "#060d1a", color: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>データがありません</div>;
+
+  const first = allData[0];
+  const last  = allData[allData.length - 1];
+  const stats = METRICS.map(m => ({ ...m, start: first[m.key], end: last[m.key], diff: +(last[m.key] - first[m.key]).toFixed(1), min: +Math.min(...allData.map(d => d[m.key])).toFixed(1), max: +Math.max(...allData.map(d => d[m.key])).toFixed(1) }));
+  const activeStats = stats.find(s => s.key === activeMetric.key);
+  const trendData = allData.length <= 40 ? allData : allData.filter((_, i) => i % 2 === 0 || i === allData.length - 1);
 
   return (
     <div style={{ minHeight: "100vh", background: "#060d1a", color: "#e2e8f0", fontFamily: "'Noto Sans JP', 'Hiragino Sans', sans-serif", padding: "20px 16px", maxWidth: 700, margin: "0 auto" }}>
