@@ -86,6 +86,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState(METRICS[0]);
   const [view, setView] = useState("trend");
+  const [range, setRange] = useState(9999);
 
   useEffect(() => {
     fetchFromSheets()
@@ -109,7 +110,13 @@ export default function App() {
   const last  = allData[allData.length - 1];
   const stats = METRICS.map(m => ({ ...m, start: first[m.key], end: last[m.key], diff: +(last[m.key] - first[m.key]).toFixed(1), min: +Math.min(...allData.map(d => d[m.key])).toFixed(1), max: +Math.max(...allData.map(d => d[m.key])).toFixed(1) }));
   const activeStats = stats.find(s => s.key === activeMetric.key);
-  const trendData = allData.length <= 40 ? allData : allData.filter((_, i) => i % 2 === 0 || i === allData.length - 1);
+  const filtered = range >= 9999 ? allData : (() => {
+    const cutoff = new Date(last.date);
+    cutoff.setDate(cutoff.getDate() - range);
+    const cutoffStr = `${cutoff.getFullYear()}/${String(cutoff.getMonth()+1).padStart(2,'0')}/${String(cutoff.getDate()).padStart(2,'0')}`;
+    return allData.filter(d => d.date >= cutoffStr);
+  })();
+  const trendData = filtered.length <= 40 ? filtered : filtered.filter((_, i) => i % 2 === 0 || i === filtered.length - 1);
 
   return (
     <div style={{ minHeight: "100vh", background: "#060d1a", color: "#e2e8f0", fontFamily: "'Noto Sans JP', 'Hiragino Sans', sans-serif", padding: "20px 16px", maxWidth: 700, margin: "0 auto" }}>
@@ -155,6 +162,17 @@ export default function App() {
 
       {/* チャート */}
       <div style={{ background: "#0c1524", borderRadius: 16, padding: "20px 12px 10px", border: "1px solid #1e293b", marginBottom: 16 }}>
+        {/* 期間選択 */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 14, paddingLeft: 8 }}>
+          {[[30,"30日"],[90,"90日"],[180,"180日"],[9999,"全期間"]].map(([v, lbl]) => (
+            <button key={v} onClick={() => setRange(v)} style={{
+              padding: "4px 12px", borderRadius: 999, fontSize: 11, border: "none", cursor: "pointer",
+              background: range === v ? "#1e3a5f" : "transparent",
+              color: range === v ? "#60a5fa" : "#475569",
+            }}>{lbl}</button>
+          ))}
+        </div>
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingLeft: 8 }}>
           <div>
             <div style={{ fontSize: 13, color: activeMetric.color, fontWeight: 700 }}>{activeMetric.label}</div>
