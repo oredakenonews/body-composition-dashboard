@@ -134,9 +134,9 @@ export default function App() {
       {/* ヒーロー統計 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
         {[
-          { label: "体重減少", value: `${Math.abs(last.weight - first.weight).toFixed(1)} kg`, sub: `${first.weight} → ${last.weight}`, color: "#60a5fa" },
-          { label: "内臓脂肪", value: `${first.visceral} → ${last.visceral}`, sub: `${first.visceral - last.visceral} 改善`, color: "#f43f5e" },
-          { label: "体年齢",   value: `${first.bodyAge} → ${last.bodyAge}歳`, sub: `${first.bodyAge - last.bodyAge}歳 若返り`, color: "#fbbf24" },
+          { label: "体重", value: `${last.weight} kg`, sub: `${first.weight} → ${last.weight} (${(last.weight - first.weight).toFixed(1)})`, color: "#60a5fa" },
+          { label: "体脂肪量", value: `${last.fatKg} kg`, sub: `${first.fatKg} → ${last.fatKg} (${(last.fatKg - first.fatKg).toFixed(1)})`, color: "#f97316" },
+          { label: "骨格筋量", value: `${last.muscleKg} kg`, sub: `${first.muscleKg} → ${last.muscleKg} (+${(last.muscleKg - first.muscleKg).toFixed(1)})`, color: "#34d399" },
         ].map(s => (
           <div key={s.label} style={{ background: "#0f172a", border: `1px solid ${s.color}22`, borderRadius: 12, padding: "14px 12px", textAlign: "center" }}>
             <div style={{ fontSize: 10, color: "#64748b", marginBottom: 6 }}>{s.label}</div>
