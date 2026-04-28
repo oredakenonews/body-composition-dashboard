@@ -128,7 +128,17 @@ export default function App() {
           <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: "-0.02em" }}>体組成ダッシュボード</h1>
           <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>{first.date} → {last.date}｜{allData.length} 回測定</div>
         </div>
-        <UploadButton onUpload={(newRows) => setAllData(prev => dedupByDate([...prev, ...newRows]))} />
+        <UploadButton onUpload={(newRows) => {
+          const converted = newRows.map(r => {
+            const d = r.date instanceof Date ? r.date : new Date(r.date);
+            const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+            const date = `${jst.getFullYear()}/${String(jst.getMonth()+1).padStart(2,'0')}/${String(jst.getDate()).padStart(2,'0')}`;
+            const label = `${jst.getMonth()+1}/${jst.getDate()}`;
+            const monthLabel = `${jst.getFullYear()}/${String(jst.getMonth()+1).padStart(2,'0')}`;
+            return { date, label, monthLabel, weight: r.weight, fatPct: r.fat, fatKg: r.fatMass, visceral: r.visceral, bmr: r.bmr, musclePct: r.musclePct, muscleKg: r.muscle, bmi: r.bmi, bodyAge: r.age, leanMass: +(r.weight - r.fatMass).toFixed(1) };
+          });
+          setAllData(prev => dedupByDate([...prev, ...converted]));
+        }} />
       </div>
 
       {/* ヒーロー統計 */}
