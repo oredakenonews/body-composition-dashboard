@@ -19,16 +19,16 @@ export default function AIAdvice({ data }) {
     const totalFatChange = (first.fatKg - latest.fatKg).toFixed(1);
     const totalWeightChange = (first.weight - latest.weight).toFixed(1);
 
-    const recentWeightChange = (recentFirst.weight - latest.weight).toFixed(1);
-    const recentMuscleChangeNum = Number((latest.muscleKg - recentFirst.muscleKg).toFixed(1));
-    const recentFatChangeNum = Number((recentFirst.fatKg - latest.fatKg).toFixed(1));
-
-    const recentMuscleNote = Math.abs(recentMuscleChangeNum) <= 0.5
-      ? '変化なし（誤差範囲）'
-      : `${recentMuscleChangeNum >= 0 ? '+' : ''}${recentMuscleChangeNum}kg`;
-    const recentFatNote = Math.abs(recentFatChangeNum) <= 0.5
-      ? '変化なし（誤差範囲）'
-      : `${recentFatChangeNum >= 0 ? '-' : '+'}${Math.abs(recentFatChangeNum)}kg`;
+    // 直近の測定間隔を計算（日数）
+    const recentIntervals = recent.slice(1).map((r, i) => {
+      const diff = (new Date(r.date) - new Date(recent[i].date)) / 86400000;
+      return Math.round(diff);
+    });
+    const avgInterval = recentIntervals.length
+      ? (recentIntervals.reduce((s, v) => s + v, 0) / recentIntervals.length).toFixed(1)
+      : 1;
+    const maxInterval = recentIntervals.length ? Math.max(...recentIntervals) : 1;
+    const hasRestPeriod = maxInterval >= 4;
 
     const prompt = `あなたは体組成データを分析するフィットネスアドバイザーです。
 出力はプレーンテキストのみで、マークダウン記号（**や##など）は一切使わないこと。
@@ -39,21 +39,20 @@ export default function AIAdvice({ data }) {
 全期間変化: 体重-${totalWeightChange}kg / 体脂肪量-${totalFatChange}kg / 骨格筋量${Number(totalMuscleChange) >= 0 ? '+' : ''}${totalMuscleChange}kg
 
 【直近7計測のトレンド】${recentFirst.date}〜${latest.date}
-体重: ${recentFirst.weight}kg → ${latest.weight}kg（${Number(recentWeightChange) >= 0 ? '-' : '+'}${Math.abs(recentWeightChange)}kg）
-体脂肪量: ${recentFirst.fatKg}kg → ${latest.fatKg}kg（${recentFatNote}）
-骨格筋量: ${recentFirst.muscleKg}kg → ${latest.muscleKg}kg（${recentMuscleNote}）
+体重: ${recentFirst.weight}kg → ${latest.weight}kg
+体脂肪量: ${recentFirst.fatKg}kg → ${latest.fatKg}kg
+骨格筋量: ${recentFirst.muscleKg}kg → ${latest.muscleKg}kg
+平均測定間隔: ${avgInterval}日 / 最大間隔: ${maxInterval}日${hasRestPeriod ? '（休養期間あり）' : ''}
 
-目標: 体重73kg（残り${(latest.weight - 73).toFixed(1)}kg）
+目標: 体重73kg（残り${(latest.weight - 73).toFixed(1)}kg）、筋肉は現状維持〜微増を狙っている
 
 【分析の注意事項】
-- 「変化なし（誤差範囲）」と記載された項目はポジティブ・ネガティブどちらの評価もしないこと
-- 全期間と直近トレンドを明確に区別して評価すること
-- 直近トレンドを優先してコンディションを判断すること
+- 直近に4日以上の測定空白がある場合は「休養明け」として扱い、その前後の数値変動は誤差として評価しないこと
+- 体組成の数値は日々ブレがあるため、短期の小幅な変動（±0.5kg程度）はトレンドとして評価しないこと
+- 全期間のトレンドを軸に、直近の状態をさらっと添える程度にすること
+- 淡々と事実ベースで、過剰な心配や褒めは不要
 
-以下の順番で3〜4文のプレーンテキストで述べてください:
-①直近の調子（直近7計測のトレンドから）
-②全体の進捗評価
-③一言アドバイス`;
+3文以内のプレーンテキストで述べてください。`;
 
     try {
       const res = await fetch('/api/advice', {
