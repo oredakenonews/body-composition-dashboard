@@ -10,21 +10,18 @@ export default function AIAdvice({ data }) {
 
     const first = data[0];
     const latest = data[data.length - 1];
-    const days = Math.round((latest.date - first.date) / 86400000);
+    const days = Math.round((new Date(latest.date) - new Date(first.date)) / 86400000);
 
-    // 直近7計測のトレンド
     const recent = data.slice(-7);
     const recentFirst = recent[0];
 
-    // 全期間変化
-    const totalMuscleChange = (latest.muscle - first.muscle).toFixed(1);
-    const totalFatChange = (first.fatMass - latest.fatMass).toFixed(1);
+    const totalMuscleChange = (latest.muscleKg - first.muscleKg).toFixed(1);
+    const totalFatChange = (first.fatKg - latest.fatKg).toFixed(1);
     const totalWeightChange = (first.weight - latest.weight).toFixed(1);
 
-    // 直近変化（±0.5kg以内は誤差範囲として表示を差し替え）
     const recentWeightChange = (recentFirst.weight - latest.weight).toFixed(1);
-    const recentMuscleChangeNum = Number((latest.muscle - recentFirst.muscle).toFixed(1));
-    const recentFatChangeNum = Number((recentFirst.fatMass - latest.fatMass).toFixed(1));
+    const recentMuscleChangeNum = Number((latest.muscleKg - recentFirst.muscleKg).toFixed(1));
+    const recentFatChangeNum = Number((recentFirst.fatKg - latest.fatKg).toFixed(1));
 
     const recentMuscleNote = Math.abs(recentMuscleChangeNum) <= 0.5
       ? '変化なし（誤差範囲）'
@@ -36,15 +33,15 @@ export default function AIAdvice({ data }) {
     const prompt = `あなたは体組成データを分析するフィットネスアドバイザーです。
 出力はプレーンテキストのみで、マークダウン記号（**や##など）は一切使わないこと。
 
-【全期間サマリー】${days}日間（${first.dateLabel.slice(0, 10)}〜${latest.dateLabel.slice(0, 10)}）
-開始時: 体重${first.weight}kg / 体脂肪量${first.fatMass}kg / 骨格筋量${first.muscle}kg / 内臓脂肪Lv${first.visceral} / 体年齢${first.age}歳
-現在:   体重${latest.weight}kg / 体脂肪量${latest.fatMass}kg / 骨格筋量${latest.muscle}kg / 内臓脂肪Lv${latest.visceral} / 体年齢${latest.age}歳
+【全期間サマリー】${days}日間（${first.date}〜${latest.date}）
+開始時: 体重${first.weight}kg / 体脂肪量${first.fatKg}kg / 骨格筋量${first.muscleKg}kg / 内臓脂肪Lv${first.visceral} / 体年齢${first.bodyAge}歳
+現在:   体重${latest.weight}kg / 体脂肪量${latest.fatKg}kg / 骨格筋量${latest.muscleKg}kg / 内臓脂肪Lv${latest.visceral} / 体年齢${latest.bodyAge}歳
 全期間変化: 体重-${totalWeightChange}kg / 体脂肪量-${totalFatChange}kg / 骨格筋量${Number(totalMuscleChange) >= 0 ? '+' : ''}${totalMuscleChange}kg
 
-【直近7計測のトレンド】${recentFirst.dateLabel.slice(0, 10)}〜${latest.dateLabel.slice(0, 10)}
+【直近7計測のトレンド】${recentFirst.date}〜${latest.date}
 体重: ${recentFirst.weight}kg → ${latest.weight}kg（${Number(recentWeightChange) >= 0 ? '-' : '+'}${Math.abs(recentWeightChange)}kg）
-体脂肪量: ${recentFirst.fatMass}kg → ${latest.fatMass}kg（${recentFatNote}）
-骨格筋量: ${recentFirst.muscle}kg → ${latest.muscle}kg（${recentMuscleNote}）
+体脂肪量: ${recentFirst.fatKg}kg → ${latest.fatKg}kg（${recentFatNote}）
+骨格筋量: ${recentFirst.muscleKg}kg → ${latest.muscleKg}kg（${recentMuscleNote}）
 
 目標: 体重73kg（残り${(latest.weight - 73).toFixed(1)}kg）
 
@@ -76,16 +73,16 @@ export default function AIAdvice({ data }) {
   }
 
   return (
-    <div style={{ background: '#fff', borderRadius: 12, padding: '20px', border: '0.5px solid rgba(0,0,0,0.08)', marginBottom: 24 }}>
+    <div style={{ background: '#0c1524', borderRadius: 16, padding: '20px', border: '1px solid #1e293b', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#e8f4fd', color: '#178acc', fontWeight: 500 }}>AI アドバイス</span>
+        <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#1e3a5f', color: '#60a5fa', fontWeight: 500 }}>AI アドバイス</span>
       </div>
-      <div style={{ fontSize: 14, color: '#444', lineHeight: 1.7, minHeight: 60 }}>
+      <div style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.7, minHeight: 60 }}>
         {loading ? '分析中...' : advice || 'ボタンを押すとAIがデータを分析します。'}
       </div>
       {data.length > 0 && (
         <button onClick={getAdvice} disabled={loading}
-          style={{ marginTop: 14, padding: '7px 16px', fontSize: 13, borderRadius: 8, border: '0.5px solid #ccc', background: '#fff', cursor: 'pointer' }}>
+          style={{ marginTop: 14, padding: '7px 16px', fontSize: 13, borderRadius: 8, border: '1px solid #1e293b', background: '#1e293b', color: '#e2e8f0', cursor: 'pointer' }}>
           {loading ? '分析中...' : advice ? '再分析' : '分析する'}
         </button>
       )}
